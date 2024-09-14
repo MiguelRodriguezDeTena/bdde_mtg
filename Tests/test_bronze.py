@@ -1,11 +1,8 @@
 import unittest
 import os
-import json
 from unittest.mock import patch, MagicMock, mock_open
 from datetime import datetime, timedelta
 import urllib.parse
-
-# Import the function to test
 from ingestion.bronze import api_call
 
 class TestApiCall(unittest.TestCase):
@@ -25,9 +22,9 @@ class TestApiCall(unittest.TestCase):
         mock_get.return_value = mock_response
         mock_exists.return_value = False
 
-        root_dir = "/test/dir"
+        root_dir = "./test_dir"
         mode = "predict"
-        identifier = "test_id"
+        identifier = "test"
 
         # Call the function
         predict_days=30
@@ -48,7 +45,7 @@ class TestApiCall(unittest.TestCase):
         # Check the file operations
         self.assertTrue(mock_open.called)
         handle = mock_open()
-        handle.write.assert_called()  # Verify that write was called
+        handle.write.assert_called()
 
 
 if __name__ == '__main__':

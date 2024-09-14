@@ -25,7 +25,7 @@ def df_to_dataset(df: DataFrame) -> datasets.Dataset:
 
     df["gameplay_text"] = df.apply(lambda x: " ".join([str(x[col]) for col in target_columns]), axis=1)
 
-    df = df[["gameplay_text", "price"]][0:10]
+    df = df[["gameplay_text", "price"]]
 
     features = Features({
         "gameplay_text": Value("string"),

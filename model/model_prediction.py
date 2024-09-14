@@ -13,7 +13,8 @@ def predict_df(df: DataFrame, config:dict) -> DataFrame:
 
     pipe = mlflow.transformers.load_model(model_uri)
 
-    target_columns = ['mana_cost','type_line', 'oracle_text', 'bottomright_value','second_mana_cost','second_type_line','second_oracle_text','second_bottomright_value']
+    target_columns = ['mana_cost','type_line', 'oracle_text', 'bottomright_value','second_mana_cost','second_type_line',
+                      'second_oracle_text','second_bottomright_value']
 
     df["results"] = df.apply(lambda x: pipe(" ".join([str(x[col]) for col in target_columns])), axis=1)
 

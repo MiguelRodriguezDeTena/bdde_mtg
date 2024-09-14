@@ -6,7 +6,7 @@ from pyspark.sql import DataFrame
 import yaml
 
 class PipelineUtils():
-    def __init__(self, spark):
+    def __init__(self, spark, mode=None, root_dir=None ,config_dir=None):
         '''
         Initializes the pipeline helper class with the Spark session and parses command line arguments.
 
@@ -19,9 +19,9 @@ class PipelineUtils():
         self.parser.add_argument("--root_dir")
         self.parser.add_argument("--config_dir")
         self.args = self.parser.parse_args()
-        self.mode = self.args.mode
-        self.config_dir = self.args.config_dir
-        self.root_dir = self.args.root_dir
+        self.mode = self.args.mode if mode == None else mode
+        self.root_dir = self.args.root_dir if root_dir == None else root_dir
+        self.config_dir = self.args.config_dir if config_dir == None else config_dir
         self.spark = spark
 
     def read(self, read_zone:str, identifier:str) -> DataFrame:
@@ -96,7 +96,7 @@ class PipelineUtils():
         if not os.path.exists(write_file_path):
             os.makedirs(write_file_path)
 
-        df.write.option("delimiter", ";").option("header", "true").csv(f"{write_file_path}/{write_file_name}",
+        df.write.option("delimiter", ";").option("header", "true").csv(os.path.join(write_file_path, write_file_name),
                                                                            mode="overwrite")
         print(f"{write_file_path}/{write_file_name} has been written")
 

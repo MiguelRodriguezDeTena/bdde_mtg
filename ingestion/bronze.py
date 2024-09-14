@@ -28,11 +28,14 @@ def api_call(root_dir:str, mode:str, identifier:str, predict_days:int=30, train_
         f"not:reprint not:digital date>{predict_date_lag}")  # example "2024-07-18", it's a month prior current date
     train_query = urllib.parse.quote(
         f"legal:legacy -(year<2011 and (prints>1)) year>=2011 ((cheapest:usd and usd>0) or (usd>0)) date<{train_date_lag}")
+    test_query = urllib.parse.quote("'rowan'") #for testing purposes
     if mode:
         if mode == "train":
             url = f"{base_url}{train_query}"
         elif mode == "predict":
             url = f"{base_url}{predict_query}"
+        elif mode == "test":
+            url = f"{base_url}{test_query}"
         else:
             raise Exception("Invalid mode provided.")
 
