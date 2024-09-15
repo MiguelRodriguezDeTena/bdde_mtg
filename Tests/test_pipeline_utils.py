@@ -107,7 +107,7 @@ class TestCardProcessing(unittest.TestCase):
 
         # Check if the DataFrame's write.csv method was called with correct parameters
         mock_write.csv.assert_called_once_with(
-            os.path.join("./test_dir", write_zone, mode, f"{mode}_{write_zone}_test.csv"), mode="overwrite")
+            f"./test_dir/{write_zone}/{mode}/{mode}_{write_zone}_test.csv", mode="overwrite")
 
 
     def test_write_csv_predict_gold(self):
@@ -126,7 +126,7 @@ class TestCardProcessing(unittest.TestCase):
 
         # Check if the DataFrame's write.csv method was called with correct parameters
         mock_write.csv.assert_called_once_with(
-            os.path.join("./test_dir", write_zone, mode, f"{mode}_{write_zone}_test.csv"), mode="overwrite")
+            f"./test_dir/{write_zone}/{mode}/{mode}_{write_zone}_test.csv", mode="overwrite")
     def test_write_csv_train_silver(self):
         mode = "train"
         write_zone = "silver"
@@ -143,7 +143,7 @@ class TestCardProcessing(unittest.TestCase):
 
         # Check if the DataFrame's write.csv method was called with correct parameters
         mock_write.csv.assert_called_once_with(
-            os.path.join("./test_dir", write_zone, mode, f"{mode}_{write_zone}_test.csv"), mode="overwrite")
+            f"./test_dir/{write_zone}/{mode}/{mode}_{write_zone}_test.csv", mode="overwrite")
     def test_write_csv_train_gold(self):
         mode = "train"
         write_zone = "gold"
@@ -160,7 +160,7 @@ class TestCardProcessing(unittest.TestCase):
 
         # Check if the DataFrame's write.csv method was called with correct parameters
         mock_write.csv.assert_called_once_with(
-            os.path.join("./test_dir", write_zone, mode, f"{mode}_{write_zone}_test.csv"), mode="overwrite")
+            f"./test_dir/{write_zone}/{mode}/{mode}_{write_zone}_test.csv", mode="overwrite")
 
     def test_read_yaml(self):
         spark = MagicMock()

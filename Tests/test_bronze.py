@@ -1,5 +1,5 @@
 import unittest
-import os
+from pyspark.sql import SparkSession
 from unittest.mock import patch, MagicMock, mock_open
 from datetime import datetime, timedelta
 import urllib.parse
@@ -7,11 +7,26 @@ from src.ingestion.bronze import api_call
 
 class TestApiCall(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        """
+        Initialize the PySpark session
+        """
+        cls.spark = SparkSession.builder \
+            .master("local[2]") \
+            .appName("UnitTest") \
+            .getOrCreate()
+
+    @classmethod
+    def tearDownClass(cls):
+        """
+        Stop the PySpark session
+        """
+        cls.spark.stop()
+
     @patch('src.ingestion.bronze.requests.get')
-    @patch('src.ingestion.bronze.os.makedirs')
-    @patch('src.ingestion.bronze.os.path.exists')
     @patch('src.ingestion.bronze.open', new_callable=unittest.mock.mock_open)
-    def test_api_call(self, mock_open, mock_exists, mock_makedirs, mock_get):
+    def test_api_call(self, mock_open, mock_get):
         # Define mock data
         mock_response = MagicMock()
         mock_response.json.return_value = {
@@ -20,7 +35,6 @@ class TestApiCall(unittest.TestCase):
             "has_more": False
         }
         mock_get.return_value = mock_response
-        mock_exists.return_value = False
 
         root_dir = "./test_dir"
         mode = "predict"
@@ -28,10 +42,9 @@ class TestApiCall(unittest.TestCase):
 
         # Call the function
         predict_days=30
-        api_call(root_dir=root_dir, mode=mode, identifier=identifier, predict_days=predict_days)
+        api_call(self.spark,root_dir=root_dir, mode=mode, identifier=identifier, predict_days=predict_days)
 
         # Check if directories and files were created
-        mock_makedirs.assert_called_once_with(os.path.join(root_dir, "bronze", mode), exist_ok=True)
         mock_open.assert_called()
 
         # Check if correct URLs were used

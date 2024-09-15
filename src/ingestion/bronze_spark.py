@@ -5,7 +5,7 @@ import urllib.parse
 import requests
 import time
 
-def api_call(root_dir:str, mode:str, identifier:str, predict_days:int=30, train_days:int=365) -> None:
+def api_call(spark, root_dir:str, mode:str, identifier:str, predict_days:int=30, train_days:int=365) -> None:
     '''
     Make an API call to Scryfall, handle pagination, and save the results to a file.
 
@@ -39,8 +39,9 @@ def api_call(root_dir:str, mode:str, identifier:str, predict_days:int=30, train_
         else:
             raise Exception("Invalid mode provided.")
 
-    file_index = 0
+
     start = time.time()
+    all_data = []
 
     while True:
         try:
@@ -51,46 +52,35 @@ def api_call(root_dir:str, mode:str, identifier:str, predict_days:int=30, train_
             break
 
         data = response.json()
+
         if data.get("object") == "error":
             print(
                 f"Error - Code: {data.get('code')}, Status: {data.get('status')}, Warnings: {data.get('warnings')}")
             break
 
         elif isinstance(data.get("data"), list):
-            page = data.get("data", [])
-
-            # Write each page to a separate file in the file_path
-            os.makedirs(file_path, exist_ok=True)
-            temp_file_path = f"{file_path}/{file_name}_{file_index}.json"
-            with open(temp_file_path, "w") as file:
-                json.dump(page, file)
+            # Append data from each page
+            all_data.extend(data.get("data", []))
 
             # Check if there is a next page
             if not data.get("has_more", False):
                 break
 
             url = data.get("next_page", "")
-            file_index += 1
             time.sleep(0.15)  # Delay to avoid being banned
+
         else:
             print("This is not a list object, please check the Scryfall queries used.")
             break
 
-    # Merge all files into one final file
+    if all_data:
+        rdd = spark.sparkContext.parallelize(all_data)  # Distribute the data
+        df = spark.read.json(rdd)  # Convert to DataFrame
 
-    merged_data = []
+        # Save DataFrame to Azure Blob, AWS S3, or other supported formats
+        final_file_path = f"{root_dir}/bronze/{mode}_bronze_{identifier}.json"
+        df.write.mode("overwrite").json(final_file_path)  # Save DataFrame as JSON files in a cloud location
 
-    for i in range(file_index + 1):
-        temp_file_path = f"{file_path}/{file_name}_{i}.json"
-        if os.path.exists(temp_file_path):
-            with open(temp_file_path, "r") as file:
-                merged_data.extend(json.load(file))
-            # Remove the temporary file after reading
-            os.remove(temp_file_path)
-
-    final_file_path = f"{file_path}/{file_name}.json"
-    with open(final_file_path, "w") as final_file:
-        json.dump(merged_data, final_file)
-
-    end = time.time()
-    print(f"{file_name} generated at {file_path} in {end - start:.4f} seconds")
+        print(f"Data saved to {final_file_path} in {time.time() - start:.4f} seconds")
+    else:
+        print("No data retrieved from the API.")

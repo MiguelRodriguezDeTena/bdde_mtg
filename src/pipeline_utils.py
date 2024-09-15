@@ -1,8 +1,7 @@
 import os
 import argparse
-import json
 from datetime import datetime
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, Row
 import yaml
 
 class PipelineUtils():
@@ -21,7 +20,8 @@ class PipelineUtils():
         self.parser.add_argument("--mode")
         self.parser.add_argument("--root_dir")
         self.parser.add_argument("--config_dir")
-        self.args = self.parser.parse_args()
+        self.args, self.unknown = self.parser.parse_known_args()
+        #self.args = self.parser.parse_args()
         self.mode = self.args.mode if mode == None else mode
         self.root_dir = self.args.root_dir if root_dir == None else root_dir
         self.config_dir = self.args.config_dir if config_dir == None else config_dir
@@ -39,7 +39,7 @@ class PipelineUtils():
         DataFrame: A Spark DataFrame with the loaded data.
         '''
 
-        read_file_path = os.path.join(self.root_dir, read_zone, self.mode)
+        read_file_path = f"{self.root_dir}/{read_zone}/{self.mode}"
         read_file_name = f"{self.mode}_{read_zone}_{identifier}"
 
         if read_zone != "bronze":
@@ -62,20 +62,22 @@ class PipelineUtils():
         str: The identifier for the current dataset.
         '''
 
-        if overwrite == True:
-            manifest_file_path = os.path.join(self.root_dir, "manifest")
-            os.makedirs(manifest_file_path, exist_ok=True)
+        manifest_file_path = f"{self.root_dir}/manifest/{self.mode}_manifest.json"
+
+        if overwrite:
             identifier = datetime.now().strftime("%y%m%d%H%M%S")
             manifest_data = {
                 "identifier": identifier
             }
-            with open(os.path.join(self.root_dir, "manifest", f"{self.mode}_manifest.json"), "w") as manifest_file:
-                json.dump(manifest_data, manifest_file, indent=4)
+
+            manifest_df = self.spark.createDataFrame([Row(identifier=identifier)])
+            manifest_df.coalesce(1).write.mode("overwrite").json(manifest_file_path)
+
             print(f"New manifest file overwrite with number {identifier}")
             return identifier
         else:
-            with open(os.path.join(self.root_dir, "manifest", f"{self.mode}_manifest.json"), "r") as manifest_file:
-                identifier = json.load(manifest_file).get("identifier")
+            manifest_df = self.spark.read.json(manifest_file_path)
+            identifier = manifest_df.select("identifier").first().identifier
             return identifier
 
     def write_csv(self, df:DataFrame, write_zone:str, identifier:str) -> None:
@@ -93,13 +95,13 @@ class PipelineUtils():
         '''
 
 
-        write_file_path = os.path.join(self.root_dir, write_zone,self.mode)
+        write_file_path = f"{self.root_dir}/{write_zone}/{self.mode}"
         write_file_name = f"{self.mode}_{write_zone}_{identifier}.csv"
 
         if not os.path.exists(write_file_path):
             os.makedirs(write_file_path)
 
-        df.write.option("delimiter", ";").option("header", "true").csv(os.path.join(write_file_path, write_file_name),
+        df.write.option("delimiter", ";").option("header", "true").csv(f"{write_file_path}/{write_file_name}",
                                                                            mode="overwrite")
         print(f"{write_file_path}/{write_file_name} has been written")
 

@@ -82,7 +82,7 @@ def train_model(df:DataFrame, config:dict) -> None:
     )
     # Initialize MLflow for tracking
     mlflow.set_tracking_uri("databricks")
-    mlflow.set_experiment(f"experiment_{config["model_name"]}")
+    mlflow.set_experiment(f"experiment_{config['model_name']}")
 
     with mlflow.start_run() as run:
         # Log parameters

@@ -1,2 +1,2 @@
-from model_prediction import write_predict_results
-from model_training import train_model
+from .model_prediction import write_predict_results
+from .model_training import train_model

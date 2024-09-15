@@ -1,4 +1,3 @@
-import os
 import mlflow
 from pyspark.sql import DataFrame
 
@@ -53,7 +52,7 @@ def write_predict_results(df:DataFrame, config: dict, root_dir: str, identifier:
 
     df = df[["oracle_id", "name", "image_link", "label", "score", "price"]]
 
-    write_file_path = os.path.join(root_dir, f"results")
+    write_file_path = f"{root_dir}/results"
     write_file_name = f"results_{identifier}.csv"
 
     if not os.path.exists(write_file_path):
