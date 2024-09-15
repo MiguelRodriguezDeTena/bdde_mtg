@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=72", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bdde_mtg"
+version = "0.1.0"
+description = "data pipeline and text_classification model to predict price range of MTG cards"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{name = "Miguel Rodríguez", email = "miguro21@ucm.es"}]
+dependencies = [
+"pyspark >= 3.4",
+"mlflow >= 2.16",
+"transformers >= 4.41",
+"datasets >= 2.19",
+]
+
+[project.urls]
+homepage = "https://github.com/MiguelRodriguezDeTena"
+repository = "https://github.com/MiguelRodriguezDeTena/bdde_mtg"

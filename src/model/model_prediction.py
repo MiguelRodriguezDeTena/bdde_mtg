@@ -1,8 +1,19 @@
 import os
 import mlflow
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import DataFrame
 
 def predict_df(df: DataFrame, config:dict) -> DataFrame:
+
+    '''
+    Applies a pre-trained ML model to predict labels and scores on the input DataFrame.
+
+    Parameters:
+    df (DataFrame): The Spark DataFrame to be transformed into a Pandas DataFrame for model inference.
+    config (dict): The configuration dictionary containing model information, such as 'model_name'.
+
+    Returns:
+    DataFrame: The Pandas DataFrame with prediction results including 'label' and 'score'.
+    '''
 
     df = df.toPandas()
 
@@ -24,7 +35,19 @@ def predict_df(df: DataFrame, config:dict) -> DataFrame:
     return df
 
 
-def write_predict_results(df, config, root_dir, identifier):
+def write_predict_results(df:DataFrame, config: dict, root_dir: str, identifier: str) -> None:
+    '''
+    Writes the prediction results to a CSV file in the specified directory.
+
+    Parameters:
+    df (DataFrame): The Spark DataFrame containing the prediction results.
+    config (dict): The configuration dictionary passed to the prediction function.
+    root_dir (str): The root directory where the result file will be saved.
+    identifier (str): A unique identifier to use in the result file's name.
+
+    Returns:
+    None
+    '''
 
     df = predict_df(df, config)
 

@@ -1,7 +1,7 @@
 import unittest
 from pyspark.sql import SparkSession
-from pipeline_utils import PipelineUtils
-from ingestion.silver import select_data_from_json, silver_transform
+from src.pipeline_utils import PipelineUtils
+from src.ingestion.silver import select_data_from_json, silver_transform
 
 class TestCardProcessing(unittest.TestCase):
     @classmethod

@@ -43,8 +43,10 @@ def train_model(df:DataFrame, config:dict) -> None:
 
     Args:
         df (DataFrame): Spark DataFrame containing training data.
-        root_dir (str): Directory where training artifacts are saved.
-        experiment_name (str): Name of the MLflow experiment.
+        config (dict): Dictionary containing model configuration, tokenizer arguments, and training parameters.
+
+    Returns:
+        None
     """
 
     dataset = df_to_dataset(df)

@@ -12,6 +12,9 @@ class PipelineUtils():
 
         Parameters:
         spark (SparkSession): The active Spark session.
+        mode (str, optional): The mode of operation (e.g., 'train', 'predict'). Defaults to None.
+        root_dir (str, optional): The root directory for file reading/writing. Defaults to None.
+        config_dir (str, optional): The directory for the configuration YAML file. Defaults to None.
         '''
 
         self.parser = argparse.ArgumentParser()
@@ -101,6 +104,14 @@ class PipelineUtils():
         print(f"{write_file_path}/{write_file_name} has been written")
 
     def read_yaml(self):
+
+        '''
+        Reads a YAML configuration file and returns it as a Python dictionary.
+
+        Returns:
+        dict: The parsed YAML configuration file.
+        '''
+
         with open(self.config_dir, "rb") as file:
             config = yaml.safe_load(file)
         return config

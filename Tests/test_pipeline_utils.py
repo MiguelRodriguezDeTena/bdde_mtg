@@ -1,7 +1,7 @@
 import unittest
 from pyspark.sql import SparkSession
 from unittest.mock import patch, MagicMock
-from pipeline_utils import PipelineUtils
+from src.pipeline_utils import PipelineUtils
 import os
 
 class TestCardProcessing(unittest.TestCase):

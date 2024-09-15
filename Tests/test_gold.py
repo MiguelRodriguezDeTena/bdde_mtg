@@ -1,7 +1,7 @@
 import unittest
 from pyspark.sql import SparkSession
-from pipeline_utils import PipelineUtils
-from ingestion.gold import gold_transform
+from src.pipeline_utils import PipelineUtils
+from src.ingestion.gold import gold_transform
 
 class TestCardProcessing(unittest.TestCase):
     @classmethod

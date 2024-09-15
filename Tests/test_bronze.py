@@ -3,14 +3,14 @@ import os
 from unittest.mock import patch, MagicMock, mock_open
 from datetime import datetime, timedelta
 import urllib.parse
-from ingestion.bronze import api_call
+from src.ingestion.bronze import api_call
 
 class TestApiCall(unittest.TestCase):
 
-    @patch('ingestion.bronze.requests.get')
-    @patch('ingestion.bronze.os.makedirs')
-    @patch('ingestion.bronze.os.path.exists')
-    @patch('ingestion.bronze.open', new_callable=unittest.mock.mock_open)
+    @patch('src.ingestion.bronze.requests.get')
+    @patch('src.ingestion.bronze.os.makedirs')
+    @patch('src.ingestion.bronze.os.path.exists')
+    @patch('src.ingestion.bronze.open', new_callable=unittest.mock.mock_open)
     def test_api_call(self, mock_open, mock_exists, mock_makedirs, mock_get):
         # Define mock data
         mock_response = MagicMock()
