@@ -17,7 +17,7 @@ def predict_df(df: DataFrame, config:dict) -> DataFrame:
 
     df = df.toPandas()
 
-    # mlflow.set_tracking_uri("databricks") #set to databricks
+    mlflow.set_tracking_uri("databricks")
     client = mlflow.MlflowClient()
     last_run = client.get_latest_versions(config["model_name"])[0].run_id
     model_uri = f"runs:/{last_run}/transformers-model"
