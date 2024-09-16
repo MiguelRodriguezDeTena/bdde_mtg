@@ -3,6 +3,7 @@ import argparse
 from datetime import datetime
 from pyspark.sql import DataFrame, Row
 import yaml
+import json
 
 class PipelineUtils():
     def __init__(self, spark, mode=None, root_dir=None ,config_dir=None):
@@ -16,15 +17,9 @@ class PipelineUtils():
         config_dir (str, optional): The directory for the configuration YAML file. Defaults to None.
         '''
 
-        self.parser = argparse.ArgumentParser()
-        self.parser.add_argument("--mode")
-        self.parser.add_argument("--root_dir")
-        self.parser.add_argument("--config_dir")
-        self.args, self.unknown = self.parser.parse_known_args()
-        #self.args = self.parser.parse_args()
-        self.mode = self.args.mode if mode == None else mode
-        self.root_dir = self.args.root_dir if root_dir == None else root_dir
-        self.config_dir = self.args.config_dir if config_dir == None else config_dir
+        self.mode = mode 
+        self.root_dir = root_dir 
+        self.config_dir = config_dir 
         self.spark = spark
 
     def read(self, read_zone:str, identifier:str) -> DataFrame:
@@ -32,7 +27,7 @@ class PipelineUtils():
         Reads data from the specified zone (bronze, silver, gold) and returns it as a Spark DataFrame.
 
         Parameters:
-        read_zone (str): The data zone to read from ('bronze', 'silver', or 'gold').
+        read_zone (str): The data zone to read from (bronze, 'silver', or 'gold').
         identifier (str): The unique identifier for the dataset to be read.
 
         Returns:
@@ -46,7 +41,7 @@ class PipelineUtils():
             df = self.spark.read.format("csv").option("delimiter", ";").option("header", "true").load(
                 f"{read_file_path}/{read_file_name}.csv")
         else:
-            df = self.spark.read.json(f"{read_file_path}/{read_file_name}.json")
+            df = self.spark.read.format("json").load(f"{read_file_path}/{read_file_name}.json")
 
         print(f"Reading {read_file_path}/{read_file_name}")
         return df
@@ -62,28 +57,26 @@ class PipelineUtils():
         str: The identifier for the current dataset.
         '''
 
-        manifest_file_path = f"{self.root_dir}/manifest/{self.mode}_manifest.json"
-
         if overwrite:
             identifier = datetime.now().strftime("%y%m%d%H%M%S")
             manifest_data = {
                 "identifier": identifier
             }
 
-            manifest_df = self.spark.createDataFrame([Row(identifier=identifier)])
-            manifest_df.coalesce(1).write.mode("overwrite").json(manifest_file_path)
+            with open(f"/dbfs/tmp/{self.mode}_manifest.json", "w") as manifest_file:
+                json.dump(manifest_data, manifest_file, indent=4)
 
             print(f"New manifest file overwrite with number {identifier}")
             return identifier
         else:
-            manifest_df = self.spark.read.json(manifest_file_path)
-            identifier = manifest_df.select("identifier").first().identifier
+            with open(f"/dbfs/tmp/{self.mode}_manifest.json", "r") as manifest_file:
+                identifier = json.load(manifest_file).get("identifier")
             return identifier
 
     def write_csv(self, df:DataFrame, write_zone:str, identifier:str) -> None:
 
         '''
-        Writes the DataFrame to a CSV file in the specified write zone (bronze, silver, gold).
+        Writes the DataFrame to a CSV file in the specified write zone (silver, gold), if bronze, reads from the /dbfs/tmp file
 
         Parameters:
         df (DataFrame): The Spark DataFrame to write to a file.
@@ -98,13 +91,10 @@ class PipelineUtils():
         write_file_path = f"{self.root_dir}/{write_zone}/{self.mode}"
         write_file_name = f"{self.mode}_{write_zone}_{identifier}.csv"
 
-        if not os.path.exists(write_file_path):
-            os.makedirs(write_file_path)
-
         df.write.option("delimiter", ";").option("header", "true").csv(f"{write_file_path}/{write_file_name}",
                                                                            mode="overwrite")
         print(f"{write_file_path}/{write_file_name} has been written")
-
+    
     def read_yaml(self):
 
         '''

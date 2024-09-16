@@ -16,9 +16,11 @@ def predict_df(df: DataFrame, config:dict) -> DataFrame:
 
     df = df.toPandas()
 
-    mlflow.set_tracking_uri("databricks")
-    client = mlflow.MlflowClient()
-    last_run = client.get_latest_versions(config["model_name"])[0].run_id
+    #client = mlflow.MlflowClient()
+    #last_run = client.get_latest_versions(config["model_name"])[0].run_id
+    experiment_id = mlflow.get_experiment_by_name(f"{config['experiment_path']}/{config['model_name']}").experiment_id
+    last_run = mlflow.search_runs(experiment_ids=[experiment_id])["run_id"].tolist()[-1]
+
     model_uri = f"runs:/{last_run}/transformers-model"
 
     pipe = mlflow.transformers.load_model(model_uri)
@@ -34,7 +36,7 @@ def predict_df(df: DataFrame, config:dict) -> DataFrame:
     return df
 
 
-def write_predict_results(df:DataFrame, config: dict, root_dir: str, identifier: str) -> None:
+def write_predict_results(spark, df:DataFrame, config: dict, root_dir: str, identifier: str) -> None:
     '''
     Writes the prediction results to a CSV file in the specified directory.
 
@@ -52,10 +54,13 @@ def write_predict_results(df:DataFrame, config: dict, root_dir: str, identifier:
 
     df = df[["oracle_id", "name", "image_link", "label", "score", "price"]]
 
-    write_file_path = f"{root_dir}/results"
-    write_file_name = f"results_{identifier}.csv"
+    file_path = f"{root_dir}/results"
+    file_name = f"results_{identifier}.csv"
 
-    if not os.path.exists(write_file_path):
-        os.makedirs(write_file_path)
+    #store it as a temp file in dbfs
+    temp_file_path = f"/dbfs/tmp/{file_name}"
+    df.to_csv(temp_file_path, index=False, sep=";")
 
-    df.to_csv(f"{write_file_path}/{write_file_name}", index=False, sep=";")
+    #read temp and write in spark as csv
+    df = spark.read.option("delimiter", ";").option("header", "true").csv(f"/tmp/{file_name}")
+    df.write.option("delimiter", ";").option("header", "true").csv(f"{file_path}/{file_name}", mode="overwrite")
