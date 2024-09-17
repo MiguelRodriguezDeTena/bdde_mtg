@@ -16,14 +16,14 @@ def predict_df(df: DataFrame, config:dict) -> DataFrame:
 
     df = df.toPandas()
 
-    #client = mlflow.MlflowClient()
-    #last_run = client.get_latest_versions(config["model_name"])[0].run_id
+    #get recent model version's uri
     experiment_id = mlflow.get_experiment_by_name(f"{config['experiment_path']}/{config['model_name']}").experiment_id
     last_run = mlflow.search_runs(experiment_ids=[experiment_id])["run_id"].tolist()[-1]
-
     model_uri = f"runs:/{last_run}/transformers-model"
 
+    #initialize the pipeline
     pipe = mlflow.transformers.load_model(model_uri)
+
 
     target_columns = ['mana_cost','type_line', 'oracle_text', 'bottomright_value','second_mana_cost','second_type_line',
                       'second_oracle_text','second_bottomright_value']
@@ -52,9 +52,9 @@ def write_predict_results(spark, df:DataFrame, config: dict, root_dir: str, iden
 
     df = predict_df(df, config)
 
+    #select rows
     df = df[["oracle_id", "name", "image_link", "label", "score", "price"]]
 
-    file_path = f"{root_dir}/results"
     file_name = f"results_{identifier}.csv"
 
     #store it as a temp file in dbfs
@@ -63,4 +63,4 @@ def write_predict_results(spark, df:DataFrame, config: dict, root_dir: str, iden
 
     #read temp and write in catalog for PowerBi to connect to.
     df = spark.read.option("delimiter", ";").option("header", "true").csv(f"/tmp/{file_name}")
-    df.write.format("delta").saveAsTable("results")
+    df.write.format("delta").mode("overwrite").saveAsTable("results")

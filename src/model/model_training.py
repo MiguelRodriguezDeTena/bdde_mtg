@@ -16,17 +16,19 @@ def df_to_dataset(df: DataFrame) -> datasets.Dataset:
     Returns:
         datasets.Dataset: A Hugging Face Dataset object.
     """
-    #bucketize price, convert to pandas, then convert to a datasets.Dataset object
+    # Bucketize the 'price' column (convert prices >= 3.0 to 1, others to 0) and remove 'oracle_id'
     df = df.withColumn("price", f.when(f.col("price").cast("float") >= 3.0, 1).otherwise(0))\
-    .drop('oracle_id') #Huggingface requires the column to be named "labels"
+    .drop('oracle_id')
+
     df = df.toPandas()
 
+    # Concatenate the target columns into a single string for each row
     target_columns = ['mana_cost','type_line', 'oracle_text', 'bottomright_value','second_mana_cost','second_type_line','second_oracle_text','second_bottomright_value']
-
     df["gameplay_text"] = df.apply(lambda x: " ".join([str(x[col]) for col in target_columns]), axis=1)
 
     df = df[["gameplay_text", "price"]]
 
+    # Convert the Pandas DataFrame into a Hugging Face Dataset object
     features = Features({
         "gameplay_text": Value("string"),
         'price': ClassLabel(names=["Below_3", "Above_3"])
@@ -51,9 +53,11 @@ def train_model(df:DataFrame, config:dict) -> None:
 
     dataset = df_to_dataset(df)
 
+    # Load the pre-trained DistilBERT model from Hugging Face using the provided config
     distilbert_model = config["distilbert_model"]
     tokenizer = AutoTokenizer.from_pretrained(distilbert_model)
 
+    # Define a tokenization function that uses the tokenizer with specified arguments from config
     def tokenization(x):
         tokenizer_args = config["tokenizer_args"]
         return tokenizer(x["gameplay_text"], **tokenizer_args)
@@ -63,20 +67,21 @@ def train_model(df:DataFrame, config:dict) -> None:
 
     auto_config = AutoConfig.from_pretrained(distilbert_model)
 
-    # Set the label mappings
+    # Define label mapping (id to label and label to id)
     auto_config.id2label = {0: "Below_3", 1: "Above_3"}
     auto_config.label2id = {"Below_3": 0, "Above_3": 1}
 
     model = AutoModelForSequenceClassification.from_pretrained(distilbert_model, config=auto_config)
 
+    # Create a data collator to pad sequences to the same length for batching
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
+    # Split the dataset into training and testing datasets with config
     ds = tokenized_dataset.train_test_split(config["test_size"])
-
-    #dataset reducido para probar que se cargan los modelos bien
     train_ds = ds["train"]
     test_ds = ds["test"]
 
+    # Define the training arguments, such as batch size, number of epochs, etc., from the config
     training_args = TrainingArguments(
         **config["training_args"]
     )

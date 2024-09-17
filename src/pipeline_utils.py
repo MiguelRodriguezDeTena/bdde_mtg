@@ -1,7 +1,5 @@
-import os
-import argparse
 from datetime import datetime
-from pyspark.sql import DataFrame, Row
+from pyspark.sql import DataFrame
 import yaml
 import json
 
