@@ -61,6 +61,6 @@ def write_predict_results(spark, df:DataFrame, config: dict, root_dir: str, iden
     temp_file_path = f"/dbfs/tmp/{file_name}"
     df.to_csv(temp_file_path, index=False, sep=";")
 
-    #read temp and write in spark as csv
+    #read temp and write in catalog for PowerBi to connect to.
     df = spark.read.option("delimiter", ";").option("header", "true").csv(f"/tmp/{file_name}")
-    df.write.option("delimiter", ";").option("header", "true").csv(f"{file_path}/{file_name}", mode="overwrite")
+    df.write.format("delta").saveAsTable("results")
