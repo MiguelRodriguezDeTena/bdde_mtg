@@ -24,9 +24,10 @@ class TestApiCall(unittest.TestCase):
         """
         cls.spark.stop()
 
+    @patch("src.ingestion.bronze.pyspark.sql.SparkSession.read")
     @patch('src.ingestion.bronze.requests.get')
     @patch('src.ingestion.bronze.open', new_callable=unittest.mock.mock_open)
-    def test_api_call(self, mock_open, mock_get):
+    def test_api_call(self, mock_open, mock_get, mock_spark_read):
         # Define mock data
         mock_response = MagicMock()
         mock_response.json.return_value = {
@@ -59,7 +60,6 @@ class TestApiCall(unittest.TestCase):
         self.assertTrue(mock_open.called)
         handle = mock_open()
         handle.write.assert_called()
-
 
 if __name__ == '__main__':
     unittest.main()

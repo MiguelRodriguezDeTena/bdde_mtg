@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import urllib.parse
 import requests
 import time
+import pyspark
 
 def api_call(spark, mode:str, root_dir:str, identifier:str, predict_days:int=30, train_days:int=365) -> None:
     '''

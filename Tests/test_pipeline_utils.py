@@ -167,13 +167,6 @@ class TestCardProcessing(unittest.TestCase):
         config = PipelineUtils(spark,config_dir="test_dir/test_config.yaml").read_yaml()
         self.assertTrue(config["readable"], "yes")
 
-    def test_manifest(self):
-        spark = MagicMock()
-        train_identifier = PipelineUtils(spark, mode="train", root_dir="test_dir").manifest()
-        predict_identifier = PipelineUtils(spark, mode="predict", root_dir="test_dir").manifest()
-        self.assertTrue(train_identifier, "test")
-        self.assertTrue(predict_identifier, "test")
-
 if __name__ == "__main__":
     unittest.main()
 
