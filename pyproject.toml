@@ -12,9 +12,8 @@ authors = [{name = "Miguel Rodríguez", email = "miguro21@ucm.es"}]
 dependencies = [
 "pyspark >= 3.4",
 "mlflow >= 2.16",
-"transformers >= 4.41",
-"datasets >= 2.19",
-"accelerate >= 0.34",
+"transformers >= 4.36",
+"datasets >= 2.15"
 ]
 
 [project.urls]

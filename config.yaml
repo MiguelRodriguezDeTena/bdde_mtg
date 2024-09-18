@@ -1,6 +1,6 @@
 model_name: "MTG gameplay text price range classifier"
 
-experiment_path: "/Users/mykel/bdde_mtg"
+experiment_path: "/Users/{tu_email_de_usuario}"
 
 distilbert_model: "distilbert-base-uncased-finetuned-sst-2-english"
 
